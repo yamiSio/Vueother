@@ -1,0 +1,149 @@
+安装webpack时要先安装淘宝镜像
+npm config set registry https://registry.npm.taobao.org
+
+cnpm安装
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+
+1.安装Vue脚手架
+npm install -g @vue/cli
+老师版本:npm install -g @vue/cli@3.2.1
+卸载之前安装的:npm uninstall vue-cli -g
+全局升级Vue Cli包:npm update -g @vue/cli
+如果还是安装失败，执行:npm clean cache --force,先删了这文件夹，重新再安装
+
+2.拉取 2.x 模板 (旧版本)
+你可以全局安装一个桥接工具
+npm install -g @vue/cli-init
+
+3.Vue CLI2初始化项目                       Vue CLI3初始化项目               4版本
+vue init webpack 项目名称                vue create 项目名称              npx vue create  项目名称
+项目流程
+a.写项目名字
+b.写项目描述
+c.写项目作者
+d.选择Runtime-only，暂时选Runtime+Compiler
+e.vue-router   是否安装路由   选Y   暂时选N（还没学）
+f.ES(js)-Lint  对js代码进行规范，不规范会报错   N   选Y会让你选个规范，Standard
+在config-index.js里面，一直往下找到useEslint可以关闭（2版本）
+g.unit tests   单元测试   N
+h.e2e tests   端到端测试  N
+i.use NPM
+
+4.Vue CLI3初始化   vue create 项目名称 
+a.default，Manually。默认和手动,选Manually
+b.选择需要的东西，空格选中和取消。Babel  router
+c.将一些配置文件放独立的地方还是放package.json   选独立放
+d.保存当前配置作为未来的备选配置文件  Y    
+e.保存的名字    在APPdata内的.vuerc中删掉这个配置的
+f.选择npm还是yarn(CLI3没有这个选择)
+
+5.修改CLI3配置的方法
+a.vue ui   启动用户界面修改
+b.在node-@vue-cli-service的lib内和webpack.config.js.
+可以新建一个vue.config.js进行修改   终端输:git commit -m '添加一个配置文件'
+
+6.location.hash='aaa'  用哈希值，使url地址后缀加多一个aaa
+例：localhost:8081/#/ 
+location.hash='aaa'
+localhost:8081/#/aaa
+
+7.路由懒加载
+下面是懒加载代码
+      component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+
+8.路由的嵌套  在路由里面加个children，再往里写路由
+    {
+      path: '/home',
+      name: 'home',
+      component: Home,
+      children:[
+        {
+          path:'news',
+          component:()=>import('./views/homenews.vue')
+        },
+        {
+          path:'message',
+          component:()=>import('./views/homeMessage.vue')
+        }
+
+      ]
+    },
+然后再home里写router-link和router-view
+
+9.获取单个数据用params，获取多个用query
+<!--      用router.params.abv(router.js内path:后面的字符)获取值-->
+      <router-link :to="/user/+userId">用户</router-link>  |
+
+<!--          用$route.query.name获取查询值-->
+      <router-link :to="{path:'/profile',query:{name:'whylh',age:18 ,height:1.88}
+      }">档案</router-link>
+   
+
+10.通过点击跳转时改变title的名字
+再router.js内写
+一：前置守卫（guard）跳转前回调
+（1）无路由嵌套时：
+router.beforeEach((to,from,next)=> {
+  //从from跳转到to
+  document.title=to.meta.title
+  next()
+})
+（2.）有路由嵌套时（这个必不错）
+     router.beforeEach((to,from,next)=> {
+   document.title=to.matched[0].meta.title
+   next()
+ })
+
+注意，需要再跳转显示的路由上加meta函数
+path: '/home',
+      name: 'home',
+      component: Home,
+      meta:{
+        title:'首页'
+        },
+当跳转到home页面时名字变为首页
+
+二：后置钩子(hook) 不需要next() 跳转后回调
+router.afterEach((to,from)=>{
+  console.log('-----');
+})
+
+11.保持活跃（当一个页面点了什么后，跳转到其他，回来是还是之前点了）（适用于跳转不刷新下（单页面富应用中）       
+用了keep-alive页面跳转后，一般会被缓存（可以用方法让它重新创建）
+include   只有匹配的缓存      
+exclude   匹配的都不缓存        
+<keep-alive exclube="Profile">   
+      <router-view/>
+    </keep-alive>
+    要加这个<keep-alive>                                      ^
+      <router-view/>                                              |
+    </keep-alive>                                                  |
+                                                                             |
+页面生命周期                                                         |
+creatde(){}  创建进入时                                          |
+destroyed(){}结束，切换时                                    |
+activated(){}活跃时                                               |
+deactivated(){}不活跃时                                        |
+                                                                            |
+因为重定义会导致跳转时一直为定义的值，所以这种情况不能使用 。先在home设置一个路径的初始值    data() {
+    return {
+    path:'/home/news'
+   }
+  },
+
+  activated() {
+    this.$router.push(this.path)             活跃时获取位置
+  },
+  beforeRouteLeave(to,from,next){          使用导航守卫方法：记录离开时的路径 （但这种方法只能保留上一次页面的记录，上上次的会因为覆盖恢复初始的样子）
+    this.path=this.$route.path
+    next()
+  }
+
+
+12.安装Vuex插件，状态管理模式
+npm install vuex --save
+
+13.安装axios框架
+npm install axios --save
+
+老师的接口:http://123.207.32.32:8000/home/multidata
